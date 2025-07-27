@@ -1,0 +1,151 @@
+Project quizlet_clone {
+  database_type: "PostgreSQL"
+  note: "Quizlet-like system with folders, tags (owned by folder), and shared classes"
+}
+
+Table users {
+  id UUID [pk]
+  username varchar [unique, not null]
+  email varchar [unique, not null]
+  password_hash text
+  avatar_url text
+  bio text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table study_sets {
+  id UUID [pk]
+  title varchar [not null]
+  description text
+  visibility varchar [note: "public, private, class_only"]
+  author_id UUID [ref: > users.id]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cards {
+  id UUID [pk]
+  set_id UUID [ref: > study_sets.id]
+  term text
+  definition text
+  image_url text
+  position int
+}
+
+Table classes {
+  id UUID [pk]
+  name varchar
+  description text
+  created_by UUID [ref: > users.id]
+  created_at timestamp
+}
+
+Table class_members {
+  class_id UUID [ref: > classes.id]
+  user_id UUID [ref: > users.id]
+  role varchar [note: "owner, admin, member"]
+  indexes {
+    (class_id, user_id) [pk]
+  }
+}
+
+Table set_class_link {
+  set_id UUID [ref: > study_sets.id]
+  class_id UUID [ref: > classes.id]
+  indexes {
+    (set_id, class_id) [pk]
+  }
+}
+
+Table study_progress {
+  id UUID [pk]
+  user_id UUID [ref: > users.id]
+  set_id UUID [ref: > study_sets.id]
+  correct int
+  incorrect int
+  last_studied timestamp
+}
+
+Table review_sessions {
+  id UUID [pk]
+  user_id UUID [ref: > users.id]
+  set_id UUID [ref: > study_sets.id]
+  mode varchar [note: "flashcard, match, test"]
+  score int
+  duration int
+  started_at timestamp
+  ended_at timestamp
+}
+
+Table comments {
+  id UUID [pk]
+  set_id UUID [ref: > study_sets.id]
+  user_id UUID [ref: > users.id]
+  content text
+  created_at timestamp
+}
+
+Table likes {
+  user_id UUID [ref: > users.id]
+  set_id UUID [ref: > study_sets.id]
+  created_at timestamp
+  indexes {
+    (user_id, set_id) [pk]
+  }
+}
+
+Table roles {
+  id int [pk]
+  name varchar [unique, not null]
+}
+
+Table user_roles {
+  user_id UUID [ref: > users.id]
+  role_id int [ref: > roles.id]
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table folders {
+  id UUID [pk]
+  name varchar [not null]
+  description text
+  owner_user_id UUID [ref: > users.id, note: "nullable if shared"]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table folder_class_link {
+  folder_id UUID [ref: > folders.id]
+  class_id UUID [ref: > classes.id]
+  indexes {
+    (folder_id, class_id) [pk]
+  }
+}
+
+Table folder_sets {
+  folder_id UUID [ref: > folders.id]
+  set_id UUID [ref: > study_sets.id]
+  indexes {
+    (folder_id, set_id) [pk]
+  }
+}
+
+Table tags {
+  id UUID [pk]
+  name varchar [not null]
+  folder_id UUID [ref: > folders.id, not null]
+  note: "Each tag belongs to one folder only"
+}
+
+Table folder_set_tags {
+  folder_id UUID [ref: > folders.id]
+  set_id UUID [ref: > study_sets.id]
+  tag_id UUID [ref: > tags.id]
+  note: "Assign tag to a study set inside a folder"
+  indexes {
+    (folder_id, set_id, tag_id) [pk]
+  }
+}
