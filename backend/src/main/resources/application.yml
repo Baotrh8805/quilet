@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: quilet-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quilet
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+server:
+  port: 8081
